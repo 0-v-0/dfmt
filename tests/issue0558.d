@@ -1,0 +1,13 @@
+unittest
+{
+    auto db = new dorm.DB(
+        new dorm.Config(
+            DBDriver.MySQL,
+            "abc.def",
+            "127.0.0.1",
+            3306,
+            "user",
+            "password"
+    )
+    );
+}

@@ -753,17 +753,19 @@ private:
     }
     do
     {
+        const closingParenOnNextLine = onNextLine;
+        const keepStackedClosingParenIndent = closingParenOnNextLine && peekIs(tok!")");
         parenDepthOnLine = max(parenDepthOnLine - 1, 0);
         parenDepth--;
         indents.popWrapIndents();
         while (indents.topIsOneOf(tok!"!", tok!")"))
             indents.pop();
-        if (indents.topIs(tok!"("))
+        if (!keepStackedClosingParenIndent && indents.topIs(tok!"("))
             indents.pop();
         if (indents.topIs(tok!"."))
             indents.pop();
 
-        if (onNextLine)
+        if (closingParenOnNextLine)
         {
             newline();
         }
@@ -1844,8 +1846,17 @@ private:
             else if (currentIs(tok!")"))
             {
                 if (indents.topIs(tok!"("))
+                {
+                    indentLevel = indents.indentLevel;
                     indents.pop();
-                indentLevel = indents.indentLevel;
+                    if (!(config.dfmt_keep_line_breaks == OptionalBoolean.t
+                            && onNextLine && peekIs(tok!")")))
+                        indentLevel = indents.indentLevel;
+                }
+                else
+                {
+                    indentLevel = indents.indentLevel;
+                }
             }
             else if (currentIs(tok!"{"))
             {
