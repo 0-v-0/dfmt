@@ -27,7 +27,21 @@ do
         else if (tokens[i].type == tok!")")
             depth--;
         length += tokenLength(tokens[i]);
+        if (i + 1 < tokens.length && depth > 0)
+            length += tokenSeparatorLength(tokens[i], tokens[i + 1]);
         i++;
+    }
+    return length;
+}
+
+int tokensLength(const Token[] tokens) pure @safe @nogc
+{
+    int length = 0;
+    foreach (i, token; tokens)
+    {
+        length += tokenLength(token);
+        if (i + 1 < tokens.length)
+            length += tokenSeparatorLength(token, tokens[i + 1]);
     }
     return length;
 }
@@ -55,6 +69,7 @@ int tokenLength(ref const Token t) pure @safe @nogc
     case tok!"stringLiteral":
     case tok!"wstringLiteral":
     case tok!"dstringLiteral":
+    case tok!"comment":
         // TODO: Unicode line breaks and old-Mac line endings
         c = cast(int) t.text.countUntil('\n');
         if (c == -1)
@@ -65,6 +80,37 @@ int tokenLength(ref const Token t) pure @safe @nogc
     default:
         return INVALID_TOKEN_LENGTH;
     }
+}
+
+private bool isWordLikeToken(IdType t) pure nothrow @safe @nogc
+{
+    switch (t)
+    {
+    case tok!"identifier":
+    case tok!"comment":
+    case tok!"doubleLiteral":
+    case tok!"floatLiteral":
+    case tok!"idoubleLiteral":
+    case tok!"ifloatLiteral":
+    case tok!"intLiteral":
+    case tok!"longLiteral":
+    case tok!"realLiteral":
+    case tok!"irealLiteral":
+    case tok!"uintLiteral":
+    case tok!"ulongLiteral":
+    case tok!"characterLiteral":
+    case tok!"stringLiteral":
+    case tok!"wstringLiteral":
+    case tok!"dstringLiteral":
+        return true;
+    default:
+        return isKeyword(t);
+    }
+}
+
+private int tokenSeparatorLength(ref const Token left, ref const Token right) pure @safe @nogc
+{
+    return isWordLikeToken(left.type) && isWordLikeToken(right.type) ? 1 : 0;
 }
 
 bool isBreakToken(IdType t) pure nothrow @safe @nogc

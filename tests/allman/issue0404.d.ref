@@ -1,0 +1,31 @@
+/*
+123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+         10        20        30        40        50        60        70        80
+*/
+import std.stdio : readln,
+    readln,/* commentA */ readln, readln, readln,
+    readln, readln, readln, readln, readln, readln, writeln;
+import std.stdio : readln,
+    readln,
+    readln,
+    readln,
+    readln,/* commentB -------- */ readln,
+    readln, readln, readln, readln, readln, writeln;
+import std.stdio : readln,
+    readln,
+    readln, readln, readln, readln, readln, // commentC
+    // commentD
+    writeln;
+
+void fun(int EEEEEEE1,
+        int EEEEEEE2,
+        int EEEEEEE3, int EEEEEEE4, int EEEEEEE5, /* comment */ int EEEEEEE6)
+{
+}
+
+void gun(int EEEEEEE1,
+        int EEEEEEE2,
+        int EEEEEEE3, int EEEEEEE4, // commmmmmmmmmmmmmmmmmmmment
+        int EEEEEEE5)
+{
+}

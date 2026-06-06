@@ -27,7 +27,7 @@ struct State
 
         if (breaks == 0)
         {
-            immutable int l = currentLineLength + tokens.map!(a => tokenLength(a)).sum();
+            immutable int l = currentLineLength + tokensLength(tokens);
             if (l > config.dfmt_soft_max_line_length)
             {
                 immutable int longPenalty = (l - config.dfmt_soft_max_line_length)
@@ -57,7 +57,7 @@ struct State
                 immutable bool b = k == 0;
                 immutable uint bits = b ? ALGORITHMIC_COMPLEXITY_SUCKS : bsf(k);
                 immutable size_t j = min(i + bits + 1, tokens.length);
-                ll += tokens[i .. j].map!(a => tokenLength(a)).sum();
+                ll += tokensLength(tokens[i .. j]);
                 if (ll > config.dfmt_soft_max_line_length)
                 {
                     immutable int longPenalty = (ll - config.dfmt_soft_max_line_length)

@@ -491,12 +491,18 @@ private:
         {
             immutable t = tokens[index - 1].type;
             immutable canAddNewline = currTokenLine - prevTokenEndLine < 1;
+            const commentEnd = expressionEndIndex(index);
+            immutable forceWrapBeforeComment = config.max_line_length <= config.dfmt_soft_max_line_length
+                && prevTokenEndLine == currTokenLine
+                && currentLineLength + 1 + tokensLength(tokens[index .. commentEnd]) > config.max_line_length;
             if (peekBackIsOperator() && !isSeparationToken(t))
                 pushWrapIndent(t);
             else if (peekBackIs(tok!",") && prevTokenEndLine == currTokenLine
                     && indents.indentToMostRecent(tok!"enum") == -1)
                 pushWrapIndent(tok!",");
-            if (peekBackIsOperator() && !peekBackIsOneOf(false, tok!"comment",
+            if (forceWrapBeforeComment)
+                newline();
+            else if (peekBackIsOperator() && !peekBackIsOneOf(false, tok!"comment",
                     tok!"{", tok!"}", tok!":", tok!";", tok!",", tok!"[", tok!"(")
                     && !canAddNewline && prevTokenEndLine < currTokenLine)
                 write(" ");
@@ -965,7 +971,7 @@ private:
 
     void formatLeftBrace()
     {
-        import std.algorithm : map, sum, canFind;
+        import std.algorithm : canFind;
 
         auto tIndex = tokens[index].index;
 
@@ -1696,24 +1702,43 @@ private:
                 }
             }
         }
-        else if (!peekIs(tok!"}") && (linebreakHints.canFind(index)
-                || (linebreakHints.length == 0 && currentLineLength > config.max_line_length)))
+        else if (!peekIs(tok!"}") && index + 1 < tokens.length)
         {
-            pushWrapIndent();
-            writeToken();
-            if (indents.topIsWrap && !indents.topIs(tok!","))
+            const end = expressionEndIndex(index + 1);
+            const remaining = tokens[index + 1 .. end];
+            const shouldBreakForComment = config.max_line_length <= config.dfmt_soft_max_line_length
+                && remaining.canFind!(a => a.type == tok!"comment")()
+                && currentLineLength + tokensLength(remaining) > config.max_line_length;
+
+            if (shouldBreakForComment)
             {
-                indents.pop;
+                pushWrapIndent();
+                writeToken();
+                if (indents.topIsWrap && !indents.topIs(tok!","))
+                {
+                    indents.pop;
+                }
+                newline();
             }
-            newline();
-        }
-        else
-        {
-            writeToken();
-            if (!currentIs(tok!")") && !currentIs(tok!"]")
-                    && !currentIs(tok!"}") && !currentIs(tok!"comment"))
+            else if (!peekIs(tok!"}") && (linebreakHints.canFind(index)
+                    || (linebreakHints.length == 0 && currentLineLength > config.max_line_length)))
             {
-                write(" ");
+                pushWrapIndent();
+                writeToken();
+                if (indents.topIsWrap && !indents.topIs(tok!","))
+                {
+                    indents.pop;
+                }
+                newline();
+            }
+            else
+            {
+                writeToken();
+                if (!currentIs(tok!")") && !currentIs(tok!"]")
+                        && !currentIs(tok!"}") && !currentIs(tok!"comment"))
+                {
+                    write(" ");
+                }
             }
         }
         regenLineBreakHintsIfNecessary(index - 1);
@@ -2097,7 +2122,7 @@ const pure @safe @nogc:
         import std.algorithm : map, sum, canFind;
 
         auto e = expressionEndIndex(i, matchComma);
-        immutable int l = currentLineLength + tokens[i .. e].map!(a => tokenLength(a)).sum();
+        immutable int l = currentLineLength + tokensLength(tokens[i .. e]);
         return l > config.dfmt_soft_max_line_length || tokens[i .. e].canFind!(
                 a => a.type == tok!"comment" || isBlockHeaderToken(a.type))();
     }
