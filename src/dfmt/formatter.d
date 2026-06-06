@@ -992,12 +992,18 @@ private:
         }
         else if (astInformation.funLitStartLocations.canFindIndex(tIndex))
         {
+            import std.algorithm.searching : find;
+
             indents.popWrapIndents();
 
             sBraceDepth++;
             if (peekBackIsOneOf(true, tok!")", tok!"identifier"))
                 write(" ");
-            immutable bool multiline = isMultilineAt(index);
+            auto indentInfo = astInformation.indentInfoSortedByEndLocation
+                .find!((a, b) => a.startLocation == b)(tIndex);
+            assert(indentInfo.length > 0);
+            immutable bool multiline = isMultilineAt(index)
+                || isSourceMultiline(index, indentInfo[0].endLocation);
             writeToken();
             if (multiline)
             {
@@ -2100,6 +2106,16 @@ const pure @safe @nogc:
         immutable int l = currentLineLength + tokens[i .. e].map!(a => tokenLength(a)).sum();
         return l > config.dfmt_soft_max_line_length || tokens[i .. e].canFind!(
                 a => a.type == tok!"comment" || isBlockHeaderToken(a.type))();
+    }
+
+    bool isSourceMultiline(size_t startIndex, size_t endLocation) const
+    {
+        foreach (t; tokens[startIndex + 1 .. $])
+        {
+            if (t.index == endLocation)
+                return t.line != tokens[startIndex].line;
+        }
+        return false;
     }
 
     bool peekIsKeyword() nothrow
