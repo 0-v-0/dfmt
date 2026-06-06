@@ -101,6 +101,9 @@ else
             case "single_indent":
                 optConfig.dfmt_single_indent = optVal;
                 break;
+            case "single_line_empty_blocks":
+                optConfig.dfmt_single_line_empty_blocks = optVal;
+                break;
             case "reflow_property_chains":
                 optConfig.dfmt_reflow_property_chains = optVal;
                 break;
@@ -141,6 +144,7 @@ else
                 "template_constraint_style", &optConfig.dfmt_template_constraint_style,
                 "keep_line_breaks", &handleBooleans,
                 "single_indent", &handleBooleans,
+                "single_line_empty_blocks", &handleBooleans,
                 "reflow_property_chains", &handleBooleans);
             // dfmt on
         }
@@ -355,6 +359,7 @@ Formatting Options:
     --space_before_aa_colon
     --space_before_named_arg_colon
     --single_indent
+    --single_line_empty_blocks
     --reflow_property_chains
         `,
             optionsToString!(typeof(Config.dfmt_template_constraint_style)));

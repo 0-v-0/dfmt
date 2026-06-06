@@ -123,6 +123,7 @@ dfmt_space_before_aa_colon | `true`, **`false`** | Adds a space after an associa
 dfmt_space_before_named_arg_colon | `true`, **`false`** | Adds a space after a named function argument or named struct constructor argument before the `:`.
 dfmt_keep_line_breaks | `true`, **`false`** | Keep existing line breaks if these don't violate other formatting rules.
 dfmt_single_indent | `true`, **`false`** | Set if the code in parens is indented by a single tab instead of two.
+dfmt_single_line_empty_blocks | `true`, **`false`** | Keep empty braced blocks on one line, such as `if (cond) {}`, even with `allman` brace style.
 dfmt_reflow_property_chains | **`true`**, `false` | Recalculate the splitting of property chains into multiple lines.
 dfmt_space_after_keywords | **`true`**, `false` | Insert space after keywords (if,while,foreach,for, etc.).
 

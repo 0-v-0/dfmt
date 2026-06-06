@@ -1,0 +1,9 @@
+void fun() {
+    if (a) {
+    } else {
+        int x;
+    }
+
+    while (b) {
+    }
+}

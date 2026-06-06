@@ -64,6 +64,8 @@ struct Config
     ///
     OptionalBoolean dfmt_single_indent;
     ///
+    OptionalBoolean dfmt_single_line_empty_blocks;
+    ///
     OptionalBoolean dfmt_reflow_property_chains;
     ///
     OptionalBoolean dfmt_space_after_statement_keyword;
@@ -99,6 +101,7 @@ struct Config
         dfmt_space_before_aa_colon = OptionalBoolean.f;
         dfmt_keep_line_breaks = OptionalBoolean.f;
         dfmt_single_indent = OptionalBoolean.f;
+        dfmt_single_line_empty_blocks = OptionalBoolean.f;
         dfmt_reflow_property_chains = OptionalBoolean.t;
         dfmt_space_before_named_arg_colon = OptionalBoolean.f;
     }

@@ -1024,11 +1024,15 @@ private:
             }
             else
             {
+                immutable bool keepSingleLineEmptyBlock = config.dfmt_single_line_empty_blocks
+                    && config.dfmt_brace_style == BraceStyle.allman
+                    && peekIs(tok!"}");
+
                 if (indents.topIsTemp && indents.indentToMostRecent(tok!"static") == -1)
                     indentLevel = indents.indentLevel - 1;
                 else
                     indentLevel = indents.indentLevel;
-                if (config.dfmt_brace_style == BraceStyle.allman
+                if ((config.dfmt_brace_style == BraceStyle.allman && !keepSingleLineEmptyBlock)
                         || peekBackIsOneOf(true, tok!"{", tok!"}"))
                     newline();
                 else if (config.dfmt_brace_style == BraceStyle.knr
@@ -1038,9 +1042,22 @@ private:
                 else if (!peekBackIsOneOf(true, tok!"{", tok!"}", tok!";"))
                     write(" ");
                 writeToken();
+
+                if (keepSingleLineEmptyBlock)
+                {
+                    writeToken();
+                    if (hasCurrent && !currentIs(tok!",") && !currentIs(tok!")")
+                            && !currentIs(tok!";") && !currentIs(tok!"{"))
+                        newline();
+                    linebreakHints = [];
+                    return;
+                }
             }
             indents.push(tok!"{");
-            if (!currentIs(tok!"{"))
+            if (!currentIs(tok!"{")
+                    && !(config.dfmt_single_line_empty_blocks
+                        && config.dfmt_brace_style == BraceStyle.allman
+                        && currentIs(tok!"}")))
                 newline();
             linebreakHints = [];
         }
@@ -1270,6 +1287,14 @@ private:
             indents.pop();
             indents.pop();
             indents.push(tok!"else");
+        }
+        else if (currentIs(tok!"{"))
+        {
+            immutable i = indents.indentToMostRecent(tok!"if");
+            immutable v = indents.indentToMostRecent(tok!"version");
+            immutable mostRecent = i > v ? i : v;
+            if (mostRecent != -1)
+                indentLevel = mostRecent;
         }
     }
 
