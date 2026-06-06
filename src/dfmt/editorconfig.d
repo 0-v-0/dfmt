@@ -207,8 +207,18 @@ private EC[] parseConfig(EC)(string dir)
                         static if (is(FieldType == OptionalBoolean))
                             mixin(configDot) = propertyValue == "true" ? OptionalBoolean.t
                                 : OptionalBoolean.f;
-                        else
+                        else static if (is(FieldType == int))
+                        {
+                            static if (F == "tab_width")
+                            {
+                                if (propertyValue != "none")
                                     mixin(configDot) = to!(FieldType)(propertyValue);
+                            }
+                            else
+                                mixin(configDot) = to!(FieldType)(propertyValue);
+                        }
+                        else
+                            mixin(configDot) = to!(FieldType)(propertyValue);
                     }
                 }
             }
@@ -216,4 +226,25 @@ private EC[] parseConfig(EC)(string dir)
     }
     sections ~= section;
     return sections;
+}
+
+unittest
+{
+    import dfmt.config : Config;
+    import std.file : mkdirRecurse, rmdirRecurse, write;
+    import std.path : buildPath;
+    import std.conv : to;
+    import std.datetime.systime : Clock;
+
+    immutable tempRoot = buildPath(".tmp", "editorconfig-tab-width-none-" ~ Clock.currTime.stdTime.to!string);
+    mkdirRecurse(tempRoot);
+    scope (exit)
+        rmdirRecurse(tempRoot);
+
+    write(buildPath(tempRoot, ".editorconfig"), "[*]\nindent_style = tab\ntab_width = none\n");
+
+    auto sections = parseConfig!Config(tempRoot);
+    assert(sections.length == 2);
+    assert(sections[$ - 1].indent_style == IndentStyle.tab);
+    assert(sections[$ - 1].tab_width == -1);
 }
