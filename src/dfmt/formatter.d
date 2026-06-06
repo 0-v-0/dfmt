@@ -487,25 +487,31 @@ private:
         immutable bool currIsSlashSlash = tokens[index].text[0 .. 2] == "//";
         immutable prevTokenEndLine = index == 0 ? size_t.max : tokenEndLine(tokens[index - 1]);
         immutable size_t currTokenLine = tokens[index].line;
+        immutable bool commentStartsOnOwnLine = index > 0
+            && sourceContainsLineBreak(tokenEndIndex(tokens[index - 1]), tokens[index].index);
         if (index > 0)
         {
             immutable t = tokens[index - 1].type;
             immutable canAddNewline = currTokenLine - prevTokenEndLine < 1;
             if (peekBackIsOperator() && !isSeparationToken(t))
                 pushWrapIndent(t);
-            else if (peekBackIs(tok!",") && prevTokenEndLine == currTokenLine
+            else if (peekBackIs(tok!",") && !commentStartsOnOwnLine && prevTokenEndLine == currTokenLine
                     && indents.indentToMostRecent(tok!"enum") == -1)
                 pushWrapIndent(tok!",");
             if (peekBackIsOperator() && !peekBackIsOneOf(false, tok!"comment",
                     tok!"{", tok!"}", tok!":", tok!";", tok!",", tok!"[", tok!"(")
                     && !canAddNewline && prevTokenEndLine < currTokenLine)
                 write(" ");
-            else if (prevTokenEndLine == currTokenLine || (t == tok!")" && peekIs(tok!"{")))
+            else if (!commentStartsOnOwnLine
+                    && (prevTokenEndLine == currTokenLine || (t == tok!")" && peekIs(tok!"{"))))
                 write(" ");
             else if (peekBackIsOneOf(false, tok!"else", tok!"identifier"))
                 write(" ");
-            else if (canAddNewline || (peekIs(tok!"{") && t == tok!"}"))
-                newline();
+            else if (commentStartsOnOwnLine || canAddNewline || (peekIs(tok!"{") && t == tok!"}"))
+            {
+                if (currentLineLength != 0)
+                    newline();
+            }
 
             if (peekIs(tok!"(") && (peekBackIs(tok!")") || peekBack2Is(tok!"!")))
                 pushWrapIndent(tok!"(");
@@ -1656,7 +1662,7 @@ private:
                 && !peekIs(tok!"}") && indents.topIs(tok!"{") && parenDepth == 0)
         {
             writeToken();
-            newline();
+            simpleNewline();
         }
         else if (indents.topIs(tok!"]") && indents.topDetails.breakEveryItem
                 && !indents.topDetails.mini)
@@ -2339,6 +2345,21 @@ const pure @safe @nogc:
         default:
             return t.line;
         }
+    }
+
+    size_t tokenEndIndex(const Token t) nothrow
+    {
+        return t.index + (t.text is null ? str(t.type).length : t.text.length);
+    }
+
+    bool sourceContainsLineBreak(size_t start, size_t end) nothrow @safe
+    {
+        if (start >= end || end > rawSource.length)
+            return false;
+        foreach (c; rawSource[start .. end])
+            if (c == '\n' || c == '\r')
+                return true;
+        return false;
     }
 
     bool isBlockHeaderToken(const IdType t)
