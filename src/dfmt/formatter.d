@@ -1653,9 +1653,12 @@ private:
         if (config.dfmt_keep_line_breaks == OptionalBoolean.f)
             regenLineBreakHintsIfNecessary(index);
         if (indents.indentToMostRecent(tok!"enum") != -1
-                && !peekIs(tok!"}") && indents.topIs(tok!"{") && parenDepth == 0)
+                && indents.indentToMostRecent(tok!"{") != -1
+                && !peekIs(tok!"}") && (indents.topIs(tok!"{") || indents.topIsWrap())
+                && parenDepth == 0)
         {
             writeToken();
+            indents.popWrapIndents();
             newline();
         }
         else if (indents.topIs(tok!"]") && indents.topDetails.breakEveryItem
