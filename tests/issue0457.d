@@ -1,0 +1,1 @@
+void f(){if (a) f; else do { g; } while (b);}

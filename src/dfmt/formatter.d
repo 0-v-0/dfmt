@@ -1870,6 +1870,11 @@ private:
                 {
                     indents.pop();
                 }
+                // Keep the `do` indent alive for the trailing `while` in a
+                // `do { ... } while (...)` statement.
+                else if (peekIs(tok!"while") && indents.topIs(tok!"do"))
+                {
+                }
                 else while (sBraceDepth == 0 && indents.topIsTemp()
                         && ((!indents.topIsOneOf(tok!"else", tok!"if",
                             tok!"static", tok!"version")) || !peekIs(tok!"else")))
@@ -1916,6 +1921,11 @@ private:
             else if (currentIs(tok!"catch") || currentIs(tok!"finally"))
             {
                 indentLevel = indents.indentLevel;
+            }
+            else if (currentIs(tok!"while") && peekBackIs(tok!"}", true)
+                    && indents.topIs(tok!"do"))
+            {
+                indentLevel = indents.indentToMostRecent(tok!"do");
             }
             else
             {
