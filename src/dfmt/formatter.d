@@ -969,6 +969,14 @@ private:
 
         auto tIndex = tokens[index].index;
 
+        // Keep empty blocks compact inside single-line lambdas/struct initializers.
+        if (niBraceDepth > 0 && peekIs(tok!"}"))
+        {
+            writeToken();
+            writeToken();
+            return;
+        }
+
         if (astInformation.structInitStartLocations.canFindIndex(tIndex))
         {
             sBraceDepth++;
@@ -995,7 +1003,7 @@ private:
             indents.popWrapIndents();
 
             sBraceDepth++;
-            if (peekBackIsOneOf(true, tok!")", tok!"identifier"))
+            if (peekBackIsOneOf(true, tok!")", tok!"identifier", tok!"return"))
                 write(" ");
             immutable bool multiline = isMultilineAt(index);
             writeToken();
