@@ -201,6 +201,9 @@ private:
     /// True if the next "else" should be formatted as a single line
     bool inlineElse;
 
+    /// True while formatting a colon-style static if declaration list.
+    bool inStaticIfColonDeclarations;
+
     /// Tracks paren depth on a single line. This information can be used to
     /// indent array literals inside parens, since arrays are indented only once
     /// and paren indentation is ignored. Line breaks and "[" reset the counter.
@@ -566,6 +569,7 @@ private:
                 writeToken();
                 if (index >= tokens.length)
                 {
+                    inStaticIfColonDeclarations = false;
                     newline();
                     break;
                 }
@@ -581,7 +585,7 @@ private:
                                 || currentIs(tok!"private")
                                 || currentIs(tok!"static"))
                             && peekIs(tok!"import")) && !indents.topIsOneOf(tok!"if",
-                            tok!"debug", tok!"version"))
+                            tok!"debug", tok!"version", tok!"static"))
                 {
                     simpleNewline();
                     currentLineLength = 0;
@@ -589,7 +593,13 @@ private:
                     newline();
                 }
                 else
+                {
+                    if (inStaticIfColonDeclarations && currentIs(tok!"import"))
+                        indentLevel = 1;
+                    else
+                        inStaticIfColonDeclarations = false;
                     newline();
+                }
                 break;
             }
             else if (currentIs(tok!":"))
@@ -890,6 +900,11 @@ private:
             regenLineBreakHintsIfNecessary(index);
             if (peekIs(tok!".."))
                 writeToken();
+            else if (indents.topAre(tok!"static", tok!"if"))
+            {
+                writeToken();
+                newline();
+            }
             else if (isBlockHeader(1) && !peekIs(tok!"if"))
             {
                 writeToken();
@@ -1208,6 +1223,12 @@ private:
             {
                 if (!currentIs(tok!"{") && !currentIs(tok!";"))
                     write(" ");
+            }
+            else if (currentIs(tok!":") && indents.topAre(tok!"static", tok!"if"))
+            {
+                inStaticIfColonDeclarations = true;
+                writeToken();
+                newline();
             }
             else if (hasCurrent && !currentIs(tok!"{") && !currentIs(tok!";") && !currentIs(tok!"in") &&
                 !currentIs(tok!"out") && !currentIs(tok!"do") && current.text != "body")
@@ -1920,7 +1941,8 @@ private:
             else
             {
                 if (indents.topIsTemp() && (peekBackIsOneOf(true, tok!"}",
-                        tok!";") && !indents.topIs(tok!";")))
+                        tok!";") && !indents.topIs(tok!";"))
+                        && !inStaticIfColonDeclarations)
                     indents.popTempIndents();
                 indentLevel = indents.indentLevel;
             }
