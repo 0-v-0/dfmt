@@ -1,0 +1,30 @@
+void main()
+{
+    int foo;
+    int bar;
+    int barFoo;
+    bool sth = true;
+    bool sthElse = true;
+    bool thingy2 = true;
+
+    if (sth)
+    {
+        foo = bar;
+
+        /+
+            my: comment
+         +/
+        if (sthElse)
+        {
+            bar = foo;
+        }
+
+        /+
+            another: comment
+         +/
+        else if (thingy2)
+        {
+            barFoo = bar;
+        }
+    }
+}

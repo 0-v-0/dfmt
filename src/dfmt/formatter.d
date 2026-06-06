@@ -1920,7 +1920,8 @@ private:
             else
             {
                 if (indents.topIsTemp() && (peekBackIsOneOf(true, tok!"}",
-                        tok!";") && !indents.topIs(tok!";")))
+                        tok!";") && !indents.topIs(tok!";"))
+                    && !(currentIs(tok!"comment") && peekIs(tok!"else")))
                     indents.popTempIndents();
                 indentLevel = indents.indentLevel;
             }
